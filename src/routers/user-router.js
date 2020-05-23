@@ -80,17 +80,10 @@ router.patch('/users/me', auth, async (req, res) => {
 //delete own user profile
 router.delete('/users/me', auth, async (req, res) => {
     try {
-        // const user = await User.findByIdAndDelete(req.user._id);
-        // if (!user) {
-        //     return res.status(404).send({ error: 'The user could not be found' })
-        // }
         await req.user.remove();
-        console.log('uno')
         res.send(req.user);
-        console.log('due')
     }
     catch (err) {
-        console.log('tre')
         res.status(500).send(err);
     }
 });
