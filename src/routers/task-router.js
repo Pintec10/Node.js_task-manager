@@ -21,12 +21,31 @@ router.post('/tasks', auth, async (req, res) => {
     }
 });
 
-//fetch all own tasks 
+//fetch own tasks 
+// params examples: ?completed=true / ?limit=10&skip=20 / ?sortBy=createdAt:desc
 router.get('/tasks', auth, async (req, res) => {
+    const match = {};
+    const sort = {};
+
+    if (req.query.completed) {
+        match.completed = req.query.completed === 'true';
+    }
+
+    if (req.query.sortBy) {
+        const parts = req.query.sortBy.split(':');
+        sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
+    }
+
     try {
-        //const tasks = await Task.find({});
-        //const user = req.user;
-        await req.user.populate('userTasks').execPopulate();
+        await req.user.populate({
+            path: 'userTasks',
+            match,
+            options: {
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort
+            }
+        }).execPopulate();
         res.send(req.user.userTasks);
     }
     catch (err) {
