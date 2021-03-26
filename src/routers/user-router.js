@@ -62,7 +62,7 @@ router.get('/users/me', auth, async (req, res) => {
     res.send(req.user);
 });
 
-//update a user by id
+//update own user profile
 router.patch('/users/me', auth, async (req, res) => {
     const updates = Object.keys(req.body);
     const allowedUpdates = ['name', 'age', 'email', 'password'];
@@ -98,22 +98,24 @@ const avatarUpload = multer({
     limits: {
         fileSize: 1000000
     },
-    fileFilter(req, file, cb) {
+    fileFilter(req, file, cb) {     //cb=callback
         if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
             cb(new Error('Only JPG, JPEG and PNG format allowed'));
         }
-        cb(undefined, true);
+        cb(undefined, true);    //success: 1st argument is error, 2nd is accept upload boolean
     }
 });
 
-router.post('/users/me/avatar', auth, avatarUpload.single('avatar'), async (req, res) => {
-    const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
-    req.user.avatar = buffer;
+router.post('/users/me/avatar', auth, avatarUpload.single('avatar'),
+    async (req, res) => {       //this callback only runs when things go well
+        //multer makes uploaded file available as req.file
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
+        req.user.avatar = buffer;
 
-    await req.user.save();
-    res.send();
-},
-    (err, req, res, next) => {
+        await req.user.save();
+        res.send();
+    },
+    (err, req, res, next) => {  //providing all 4 args lets express know this handles errors
         res.status(400).send({ error: err.message });
     }
 );

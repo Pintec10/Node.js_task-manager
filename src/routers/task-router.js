@@ -78,11 +78,11 @@ router.patch('/tasks/:id', auth, async (req, res) => {
     }
     try {
         const task = await Task.findOne({ _id: req.params.id, owner: req.user._id })
-        updates.forEach(oneUpdate => task[oneUpdate] = req.body[oneUpdate]);
-        await task.save();
         if (!task) {
             return res.status(404).send();
         }
+        updates.forEach(oneUpdate => task[oneUpdate] = req.body[oneUpdate]);
+        await task.save();
         res.send(task);
     }
     catch (err) {

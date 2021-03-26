@@ -4,3 +4,5 @@ config
 
 z_notes.txt
 mongodb.js
+math.js
+math.test.js
