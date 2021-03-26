@@ -1,26 +1,16 @@
-//const { TestScheduler } = require('@jest/core');
 const request = require('supertest');
 const app = require('../src/app');
 const mongoose = require('mongoose');
 const User = require('../src/models/user');
-const jwt = require('jsonwebtoken');
+const {
+    testUser01Id,
+    testUser01Token,
+    testUser01,
+    setupDatabase
+} = require('./fixtures/db');
 
-const testUser01Id = new mongoose.Types.ObjectId;
 
-const testUser01 = {
-    _id: testUser01Id,
-    name: 'TestUser01',
-    email: 'testuser01@example.com',
-    password: 'testpass!01',
-    tokens: [{
-        token: jwt.sign({ _id: testUser01Id }, process.env.JWT_SECRET)
-    }]
-}
-
-beforeEach(async () => {
-    await User.deleteMany();
-    await new User(testUser01).save();
-});
+beforeEach(setupDatabase);
 
 afterAll(async () => {
     await mongoose.connection.close()
@@ -69,7 +59,7 @@ test('Should not login with wrong credentials', async () => {
 
 test('Should retrieve user own profile', async () => {
     await request(app).get('/users/me')
-        .set('Authorization', `Bearer ${testUser01.tokens[0].token}`)
+        .set('Authorization', `Bearer ${testUser01Token}`)
         .send()
         .expect(200);
 });
@@ -82,7 +72,7 @@ test('Should not get profile for unauthenticated user', async () => {
 
 test('Should delete user own account', async () => {
     await request(app).delete('/users/me')
-        .set('Authorization', `Bearer ${testUser01.tokens[0].token}`)
+        .set('Authorization', `Bearer ${testUser01Token}`)
         .send()
         .expect(200);
 
@@ -99,7 +89,7 @@ test('Should not delete account for unauthenticated user', async () => {
 
 test('Should upload own avatar image', async () => {
     await request(app).post('/users/me/avatar')
-        .set('Authorization', `Bearer ${testUser01.tokens[0].token}`)
+        .set('Authorization', `Bearer ${testUser01Token}`)
         .attach('avatar', 'tests/fixtures/profile-pic.jpg')
         .expect(200);
 
@@ -110,7 +100,7 @@ test('Should upload own avatar image', async () => {
 
 test('Should update valid user fields', async () => {
     await request(app).patch('/users/me')
-        .set('Authorization', `Bearer ${testUser01.tokens[0].token}`)
+        .set('Authorization', `Bearer ${testUser01Token}`)
         .send({ name: 'John' })
         .expect(200);
 
@@ -121,7 +111,7 @@ test('Should update valid user fields', async () => {
 
 test('Should not update invalid user fields', async () => {
     await request(app).patch('/users/me')
-        .set('Authorization', `Bearer ${testUser01.tokens[0].token}`)
+        .set('Authorization', `Bearer ${testUser01Token}`)
         .send({ location: 'Barcelona' })
         .expect(400);
 });
